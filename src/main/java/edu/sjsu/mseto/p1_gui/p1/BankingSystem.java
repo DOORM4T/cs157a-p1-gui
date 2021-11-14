@@ -404,8 +404,10 @@ public class BankingSystem {
     /**
      * Display Report A - Customer Information with Total Balance in Decreasing
      * Order.
+     *
+     * @return formatted reportA String
      */
-    public static void reportA() {
+    public static String reportA() {
         System.out.println(":: REPORT A - RUNNING");
 
         ArrayList<Integer> ids = new ArrayList<>();
@@ -436,13 +438,15 @@ public class BankingSystem {
             if (ids.size() == 0)
                 throw new Exception("No reportA results.");
 
-            System.out.println(String.format("%s %13s %17s %3s %13s", "ID", "NAME", "GENDER", "AGE", "TOTAL"));
-            System.out.println("----------- --------------- ------ ----------- -----------");
+            String result = "";
+            result += String.format("%s %13s %17s %3s %13s\n", "ID", "NAME", "GENDER", "AGE", "TOTAL");
+            result += "----------- --------------- ------ ----------- -----------\n";
 
             for (int i = 0; i < ids.size(); i++) {
-                System.out.println(String.format("%11s %15s %6s %11s %11s", ids.get(i), names.get(i), genders.get(i),
-                        ages.get(i), totals.get(i)));
+                result += String.format("%11s %15s %6s %11s %11s\n", ids.get(i), names.get(i), genders.get(i),
+                        ages.get(i), totals.get(i));
             }
+            return result;
         } catch (BankingSystemException e) {
             System.out.println(e.getMessage());
         } catch (Exception e) {
@@ -450,6 +454,7 @@ public class BankingSystem {
         }
 
         System.out.println(":: REPORT A - SUCCESS");
+        return "No results found";
     }
 
     /**
@@ -457,8 +462,9 @@ public class BankingSystem {
      *
      * @param min minimum age
      * @param max maximum age
+     * @return formatted reportB String
      */
-    public static void reportB(String min, String max) {
+    public static String reportB(String min, String max) {
         System.out.println(":: REPORT B - RUNNING");
 
         int avgResult;
@@ -480,9 +486,12 @@ public class BankingSystem {
             avgResult = rs.getInt(1);
             stmt.close();
 
-            System.out.println(String.format("%11s", "AVERAGE"));
-            System.out.println("-----------");
-            System.out.println(String.format("%11d", avgResult));
+            String result = "";
+            result += String.format("%11s\n", "AVERAGE");
+            result += "-----------\n";
+            result += String.format("%11d\n", avgResult);
+
+            return result;
 
         } catch (BankingSystemException e) {
             System.out.println(e.getMessage());
@@ -491,6 +500,7 @@ public class BankingSystem {
         }
 
         System.out.println(":: REPORT B - SUCCESS");
+        return "No results found";
     }
 
     /**
