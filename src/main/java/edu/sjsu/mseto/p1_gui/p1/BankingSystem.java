@@ -179,10 +179,12 @@ public class BankingSystem {
      * Close an account.
      *
      * @param accNum account number
+     * @return result String
      */
-    public static void closeAccount(String accNum) {
+    public static String closeAccount(String accNum) {
         System.out.println(":: CLOSE ACCOUNT - RUNNING");
 
+        String result = ":: CLOSE ACCOUNT - SUCCESS";
         try {
             PreparedStatement closeAccount = con.prepareStatement(String.format("UPDATE %s SET %s = 'I' WHERE %s = ?",
                     ACCOUNT_TABLE, ACCOUNT_ATTR_STATUS, ACCOUNT_ATTR_NUMBER));
@@ -190,17 +192,17 @@ public class BankingSystem {
             setPSInt(closeAccount, 1, accNum, "CLOSE ACCOUNT", "INVALID ACCOUNT NUMBER");
 
             stmt = closeAccount;
-            int result = closeAccount.executeUpdate();
+            int numChanged = closeAccount.executeUpdate();
             stmt.close();
 
-            if (result == 0)
+            if (numChanged == 0)
                 throw new Exception();
-            System.out.println(":: CLOSE ACCOUNT - SUCCESS");
         } catch (BankingSystemException e) {
-            System.out.println(e.getMessage());
+            result = e.getMessage();
         } catch (Exception e) {
-            System.out.println(":: CLOSE ACCOUNT - FAILED");
+            result = ":: CLOSE ACCOUNT - FAILED";
         }
+        return result;
     }
 
     /**
@@ -208,19 +210,21 @@ public class BankingSystem {
      *
      * @param accNum account number
      * @param amount deposit amount
+     * @return result String
      */
-    public static void deposit(String accNum, String amount) {
+    public static String deposit(String accNum, String amount) {
         System.out.println(":: DEPOSIT - RUNNING");
 
+        String result = ":: DEPOSIT - SUCCESS";
         try {
             handleDeposit(accNum, amount);
-            System.out.println(":: DEPOSIT - SUCCESS");
         } catch (BankingSystemException e) {
-            System.out.println(e.getMessage());
+            result = e.getMessage();
         } catch (Exception e) {
-            System.out.println(":: DEPOSIT - FAILED");
+            result = ":: DEPOSIT - FAILED";
         }
 
+        return result;
     }
 
     /**
@@ -252,19 +256,20 @@ public class BankingSystem {
      *
      * @param accNum account number
      * @param amount withdraw amount
+     * @return result String
      */
-    public static void withdraw(String accNum, String amount) {
+    public static String withdraw(String accNum, String amount) {
         System.out.println(":: WITHDRAW - RUNNING");
+        String result = ":: WITHDRAW - SUCCESS";
         try {
             handleWithdraw(accNum, amount);
-            System.out.println(":: WITHDRAW - SUCCESS");
-        } catch (
-
-                BankingSystemException e) {
-            System.out.println(e.getMessage());
+        } catch (BankingSystemException e) {
+            result = e.getMessage();
         } catch (Exception e) {
-            System.out.println(":: WITHDRAW - FAILED");
+            result = ":: WITHDRAW - FAILED";
         }
+
+        return result;
     }
 
     /**
@@ -319,21 +324,23 @@ public class BankingSystem {
      * @param srcAccNum  source account number
      * @param destAccNum destination account number
      * @param amount     transfer amount
+     * @return string result
      */
-    public static void transfer(String srcAccNum, String destAccNum, String amount) {
+    public static String transfer(String srcAccNum, String destAccNum, String amount) {
         System.out.println(":: TRANSFER - RUNNING");
 
+        String result = ":: TRANSFER - SUCCESS";
         try {
-            // TODO: Make this operation atomic?
             handleWithdraw(srcAccNum, amount);
             handleDeposit(destAccNum, amount);
-
-            System.out.println(":: TRANSFER - SUCCESS");
         } catch (BankingSystemException e) {
-            System.out.println(e.getMessage());
+            result = e.getMessage();
         } catch (Exception e) {
-            System.out.println(":: TRANSFER - FAILED");
+            result = ":: TRANSFER - FAILED";
         }
+
+        System.out.println(result);
+        return result;
     }
 
     /**
