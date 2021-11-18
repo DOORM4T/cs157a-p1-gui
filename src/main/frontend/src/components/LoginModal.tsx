@@ -1,9 +1,10 @@
 import { Block } from 'baseui/block'
 import { FormControl } from 'baseui/form-control'
 import { Input } from 'baseui/input'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '../App'
+import { LoginContext } from '../LoginContext'
 import DialogModal, { IUseDialogModalReturnValue } from './DialogModal'
 
 const LOGIN_ENDPOINT = '/api/canLogin'
@@ -11,6 +12,7 @@ export const LoginModal = (props: {
   loginModal: IUseDialogModalReturnValue
 }) => {
   const navigate = useNavigate()
+  const { setCustomerId } = useContext(LoginContext)
 
   const { loginModal } = props
   const [id, setId] = useState('')
@@ -26,6 +28,7 @@ export const LoginModal = (props: {
     if (isAdmin) {
       loginModal.close()
       clear()
+      setCustomerId && setCustomerId('0')
       navigate(ROUTES.admin)
     }
 
@@ -44,8 +47,8 @@ export const LoginModal = (props: {
       return
     }
 
-    // TODO: Set context of logged in user
-    // Redirect to user/admin page
+    // "Log in" the customer, remembering their ID in global LoginContext state
+    setCustomerId && setCustomerId(id)
     navigate(ROUTES.customer)
 
     loginModal.close()
