@@ -7,11 +7,10 @@ import { DisplayMedium, ParagraphMedium } from 'baseui/typography'
 import { useState } from 'react'
 import DialogModal, {
   IUseDialogModalReturnValue,
-  useDialogModal
+  useDialogModal,
 } from './components/DialogModal'
 
 const App = () => {
-  const [values, setValues] = useState(['', '', '', ''])
   const newCustomerModal = useDialogModal()
   const loginModal = useDialogModal()
 
@@ -69,20 +68,44 @@ const App = () => {
 
 export default App
 
+const LOGIN_ENDPOINT = '/api/canLogin'
 const LoginModal = (props: { loginModal: IUseDialogModalReturnValue }) => {
   const { loginModal } = props
   const [id, setId] = useState('')
   const [pin, setPin] = useState('')
+
+  const clear = () => {
+    setId('')
+    setPin('')
+  }
+
+  const handleSubmit = async () => {
+    const endpoint = `${LOGIN_ENDPOINT}?cusID=${id}&pin=${pin}`
+
+    let canLogin = false
+    try {
+      const response = await fetch(endpoint)
+      canLogin = (await response.text()) === 'true' ? true : false // API endpoint returns true/false as a String
+    } catch (error) {
+      console.error(error)
+    }
+
+    // TODO: Redirect to user/admin page
+    alert(canLogin)
+
+    if (!canLogin) return
+    loginModal.close()
+    clear()
+  }
 
   return (
     <DialogModal
       isOpen={loginModal.isOpen}
       handleClose={() => {
         loginModal.close()
+        clear()
       }}
-      handleConfirm={() => {
-        loginModal.close()
-      }}
+      handleConfirm={handleSubmit}
       text={{ headerText: 'Customer Login', confirmText: 'Create' }}
       modalContent={
         <Block minWidth="128px" maxWidth="750px">
@@ -111,24 +134,47 @@ const LoginModal = (props: { loginModal: IUseDialogModalReturnValue }) => {
 
 type Gender = 'M' | 'F' | null
 
+const NEW_CUSTOMER_ENDPOINT = '/api/newCustomer'
 const NewCustomerModal = (props: {
   newCustomerModal: IUseDialogModalReturnValue
 }) => {
   const { newCustomerModal } = props
   const [name, setName] = useState('')
   const [gender, setGender] = useState<Gender | null>(null)
-  const [pin, setPin] = useState('')
   const [age, setAge] = useState('')
+  const [pin, setPin] = useState('')
+
+  const clear = () => {
+    setName('')
+    setGender(null)
+    setAge('')
+    setPin('')
+  }
+
+  const handleSubmit = async () => {
+    const endpoint = `${NEW_CUSTOMER_ENDPOINT}?name=${name}&gender=${gender}&age=${age}&pin=${pin}`
+
+    try {
+      const response = await fetch(endpoint)
+      const newCustomerId = Number(await response.text())
+
+      if (newCustomerId === -1) throw new Error('Failed to create new customer')
+      alert(`Your customer ID is: ${newCustomerId}`)
+      newCustomerModal.close()
+      clear()
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <DialogModal
       isOpen={newCustomerModal.isOpen}
       handleClose={() => {
         newCustomerModal.close()
+        clear()
       }}
-      handleConfirm={() => {
-        newCustomerModal.close()
-      }}
+      handleConfirm={handleSubmit}
       text={{ headerText: 'Customer Login', confirmText: 'Create' }}
       modalContent={
         <Block minWidth="128px" maxWidth="750px">
@@ -150,12 +196,8 @@ const NewCustomerModal = (props: {
                 }}
                 align={ALIGN.horizontal}
               >
-                <Radio value="M" >
-                  Male
-                </Radio>
-                <Radio value="F" >
-                  Female
-                </Radio>
+                <Radio value="M">Male</Radio>
+                <Radio value="F">Female</Radio>
               </RadioGroup>
             </FormControl>
             <FormControl label={() => 'Age'}>
