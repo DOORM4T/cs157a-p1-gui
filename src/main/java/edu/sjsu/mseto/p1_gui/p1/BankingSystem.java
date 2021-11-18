@@ -72,17 +72,19 @@ public class BankingSystem {
     /**
      * Test database connection.
      */
-    public static void testConnection() {
+    public static boolean testConnection() {
         System.out.println(":: TEST - CONNECTING TO DATABASE");
         try {
             Class.forName(driver);
             setupConnection();
 
             System.out.println(":: TEST - SUCCESSFULLY CONNECTED TO DATABASE");
+            return true;
         } catch (Exception e) {
             System.out.println(":: TEST - FAILED CONNECTED TO DATABASE");
             e.printStackTrace();
         }
+        return false;
     }
 
     /**
