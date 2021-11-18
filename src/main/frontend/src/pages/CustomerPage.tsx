@@ -1,11 +1,11 @@
-import { Block } from 'baseui/block';
-import { Button } from 'baseui/button';
-import { DisplayMedium, ParagraphMedium } from 'baseui/typography';
-import { useDialogModal } from '../components/DialogModal';
-import { LoginModal } from '../components/LoginModal';
-import { NewCustomerModal } from '../components/NewCustomerModal';
+import { Block } from 'baseui/block'
+import { Button } from 'baseui/button'
+import { DisplayMedium, ParagraphMedium } from 'baseui/typography'
+import { useDialogModal } from '../components/DialogModal'
+import { LoginModal } from '../components/LoginModal'
+import { NewCustomerModal } from '../components/NewCustomerModal'
 
-const TitlePage = () => {
+const CustomerPage = () => {
   return (
     <Block
       margin="2rem auto"
@@ -14,18 +14,17 @@ const TitlePage = () => {
       alignItems="center"
       $style={{ textAlign: 'center' }}
     >
-      <DisplayMedium>Banking System</DisplayMedium>
-      <ParagraphMedium>By Matthew Seto | CS 157A Project 1</ParagraphMedium>
-      <TitleScreenModalManager />
+      <DisplayMedium>Customer</DisplayMedium>
+      {/* <TitleScreenModalManager /> */}
     </Block>
-  );
-};
+  )
+}
 
-export default TitlePage
+export default CustomerPage
 
 const TitleScreenModalManager = () => {
-  const newCustomerModal = useDialogModal();
-  const loginModal = useDialogModal();
+  const newCustomerModal = useDialogModal()
+  const loginModal = useDialogModal()
 
   return (
     <Block
@@ -56,5 +55,5 @@ const TitleScreenModalManager = () => {
       <NewCustomerModal newCustomerModal={newCustomerModal} />
       <LoginModal loginModal={loginModal} />
     </Block>
-  );
-};
+  )
+}
