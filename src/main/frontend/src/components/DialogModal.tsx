@@ -27,15 +27,15 @@ const DialogModal = (props: IProps) => {
   return (
     <Modal
       onClose={handleClose}
-      closeable
+      closeable={false}
       isOpen={isOpen}
       animate
       autoFocus
-      size={SIZE.full}
+      size={SIZE.auto}
       role={ROLE.dialog}
     >
       {text?.headerText && <ModalHeader>{text.headerText}</ModalHeader>}
-      {modalContent && <ModalBody>{modalContent}</ModalBody>}
+      <ModalBody>{modalContent}</ModalBody>
       <ModalFooter>
         <ModalButton kind={ButtonKind.tertiary} onClick={handleClose}>
           {text?.cancelText || 'Cancel'}
@@ -50,7 +50,7 @@ const DialogModal = (props: IProps) => {
 
 export default DialogModal
 
-export const useDialogModal = () => {
+export const useDialogModal = (): IUseDialogModalReturnValue => {
   const [isOpen, setIsOpen] = useState(false)
 
   const close = () => setIsOpen(false)
@@ -58,4 +58,10 @@ export const useDialogModal = () => {
   const open = () => setIsOpen(true)
 
   return { isOpen, open, close }
+}
+
+export interface IUseDialogModalReturnValue {
+  isOpen: boolean
+  open: () => void
+  close: () => void
 }
