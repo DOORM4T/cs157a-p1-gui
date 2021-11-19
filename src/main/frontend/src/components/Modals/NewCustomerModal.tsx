@@ -3,7 +3,7 @@ import { FormControl } from 'baseui/form-control'
 import { Input } from 'baseui/input'
 import { ALIGN, Radio, RadioGroup } from 'baseui/radio'
 import { useState } from 'react'
-import DialogModal, { IUseDialogModalReturnValue } from './DialogModal'
+import DialogModal, { IUseDialogModalReturnValue } from '../DialogModal'
 
 type Gender = 'M' | 'F' | null
 const NEW_CUSTOMER_ENDPOINT = '/api/newCustomer'
@@ -47,7 +47,7 @@ export const NewCustomerModal = (props: {
         clear()
       }}
       handleConfirm={handleSubmit}
-      text={{ headerText: 'Customer Login', confirmText: 'Create' }}
+      text={{ headerText: 'New Customer' }}
       modalContent={
         <Block minWidth="128px" maxWidth="750px">
           <form>
@@ -74,7 +74,6 @@ export const NewCustomerModal = (props: {
             </FormControl>
             <FormControl label={() => 'Age'}>
               <Input
-                type="number"
                 clearable
                 onChange={(e) => setAge(e.currentTarget.value)}
                 value={age}

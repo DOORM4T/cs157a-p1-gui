@@ -3,9 +3,9 @@ import { FormControl } from 'baseui/form-control'
 import { Input } from 'baseui/input'
 import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ROUTES } from '../App'
-import { LoginContext } from '../LoginContext'
-import DialogModal, { IUseDialogModalReturnValue } from './DialogModal'
+import { ROUTES } from '../../App'
+import { LoginContext } from '../../LoginContext'
+import DialogModal, { IUseDialogModalReturnValue } from '../DialogModal'
 
 const LOGIN_ENDPOINT = '/api/canLogin'
 export const LoginModal = (props: {
@@ -43,7 +43,7 @@ export const LoginModal = (props: {
     }
 
     if (!canLogin) {
-      // TODO: Show login error
+      window.alert('Login failed')
       return
     }
 
@@ -63,7 +63,7 @@ export const LoginModal = (props: {
         clear()
       }}
       handleConfirm={handleSubmit}
-      text={{ headerText: 'Customer Login', confirmText: 'Create' }}
+      text={{ headerText: 'Customer Login', confirmText: 'Login' }}
       modalContent={
         <Block minWidth="128px" maxWidth="750px">
           <form>

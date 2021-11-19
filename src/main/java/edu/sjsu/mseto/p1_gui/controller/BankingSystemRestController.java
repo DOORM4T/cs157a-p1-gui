@@ -18,9 +18,12 @@ public class BankingSystemRestController {
     public String transfer(
             @RequestParam(value = "srcAccNum") String srcAccNum,
             @RequestParam(value = "destAccNum") String destAccNum,
-            @RequestParam(value = "amount") String amount
+            @RequestParam(value = "amount") String amount,
+            @RequestParam(value = "cusID") String cusID
     ) {
         try {
+            if (!BankingSystem.doesOwnAccount(srcAccNum, cusID))
+                throw new Exception("Customer does not own that account");
             String result = BankingSystem.transfer(srcAccNum, destAccNum, amount);
             return result;
         } catch (Exception e) {
@@ -59,8 +62,9 @@ public class BankingSystemRestController {
     }
 
     @GetMapping("/api/closeAccount")
-    public String closeAccount(@RequestParam(value = "accNum") String accNum) {
+    public String closeAccount(@RequestParam(value = "accNum") String accNum, @RequestParam(value = "cusID") String cusID) {
         try {
+            if (!BankingSystem.doesOwnAccount(accNum, cusID)) throw new Exception("Customer does not own that account");
             String result = BankingSystem.closeAccount(accNum);
             return result;
         } catch (Exception e) {
@@ -129,18 +133,6 @@ public class BankingSystemRestController {
             if (Integer.parseInt(min) <= -1) throw new Exception("Invalid minAge");
             if (Integer.parseInt(max) <= -1) throw new Exception("Invalid maxAge");
             return BankingSystem.reportB(min, max);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return e.getMessage();
-        }
-    }
-
-    // TODO: Remove this? Instead, perform necessary checks in close account & transfer
-    @GetMapping("/api/doesOwnAccount")
-    public String doesOwnAccount(@RequestParam(value = "accID") String accID, @RequestParam(value = "cusID") String cusID) {
-        try {
-            boolean result = BankingSystem.doesOwnAccount(accID, cusID);
-            return String.valueOf(result);
         } catch (Exception e) {
             e.printStackTrace();
             return e.getMessage();

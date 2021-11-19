@@ -2,8 +2,8 @@ import { Block } from 'baseui/block';
 import { Button } from 'baseui/button';
 import { DisplayMedium, ParagraphMedium } from 'baseui/typography';
 import { useDialogModal } from '../components/DialogModal';
-import { LoginModal } from '../components/LoginModal';
-import { NewCustomerModal } from '../components/NewCustomerModal';
+import { LoginModal } from '../components/Modals/LoginModal';
+import { NewCustomerModal } from '../components/Modals/NewCustomerModal';
 
 const TitlePage = () => {
   return (

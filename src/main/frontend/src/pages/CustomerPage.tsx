@@ -1,12 +1,18 @@
 import { Block } from 'baseui/block'
-import { Button } from 'baseui/button'
-import { DisplayMedium } from 'baseui/typography'
-import { useContext, useEffect } from 'react'
-import { useNavigate } from 'react-router'
-import { ROUTES } from '../App'
+import { Button, ButtonProps } from 'baseui/button'
+import { FlexGrid, FlexGridItem } from 'baseui/flex-grid'
+import { DisplayMedium, Paragraph1 } from 'baseui/typography'
+import { useContext } from 'react'
+import { $StyleProp } from 'styletron-react'
 import { useDialogModal } from '../components/DialogModal'
-import { LoginModal } from '../components/LoginModal'
-import { NewCustomerModal } from '../components/NewCustomerModal'
+import { ExitToTitleButton } from '../components/ExitToTitleButton'
+import { AccountSummaryModal } from '../components/Modals/AccountSummaryModal'
+import { CloseAccountModal } from '../components/Modals/CloseAccountModal'
+import { DepositModal } from '../components/Modals/DepositModal'
+import { OpenAccountModal } from '../components/Modals/OpenAccountModal'
+import { TransferModal } from '../components/Modals/TransferModal'
+import { WithdrawModal } from '../components/Modals/WithdrawModal'
+import { useRedirectIfNotLoggedIn } from '../hooks/useRedirectIfNotLoggedIn'
 import { LoginContext } from '../LoginContext'
 
 const CustomerPage = () => {
@@ -25,56 +31,74 @@ const CustomerPage = () => {
       $style={{ textAlign: 'center' }}
     >
       <DisplayMedium>Customer</DisplayMedium>
-      {/* TODO: SHOW OPTIONS */}
-      {/* <TitleScreenModalManager /> */}
+      <Paragraph1>Main Menu | ID: {customerId}</Paragraph1>
+      <CustomerScreenModalManager />
     </Block>
   )
 }
 
 export default CustomerPage
 
-const useRedirectIfNotLoggedIn = () => {
-  const { customerId } = useContext(LoginContext)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const isLoggedIn = customerId === null
-    if (isLoggedIn) navigate(ROUTES.title)
-  }, [customerId])
+export const btnStyles: $StyleProp<ButtonProps> = {
+  width: '100%',
+  height: '100%',
 }
-
-const TitleScreenModalManager = () => {
-  const newCustomerModal = useDialogModal()
-  const loginModal = useDialogModal()
+const CustomerScreenModalManager = () => {
+  const openAccountModal = useDialogModal()
+  const closeAccountModal = useDialogModal()
+  const depositModal = useDialogModal()
+  const withdrawModal = useDialogModal()
+  const transferModal = useDialogModal()
+  const accountSummaryModal = useDialogModal()
 
   return (
-    <Block
-      display="flex"
-      flexDirection={['column', 'column', 'row']}
+    <FlexGrid
+      flexGridColumnCount={3}
+      gridGap="1rem"
+      gridColumnGap="1rem"
       width="50%"
-      maxWidth="750px"
+      maxWidth="300px"
     >
-      <Block
-        width="100%"
-        marginRight={[0, 0, '1rem']}
-        marginBottom={['1rem', '1rem', 0]}
-      >
-        <Button
-          onClick={newCustomerModal.open}
-          $style={{
-            width: '100%',
-          }}
-        >
-          New Customer
+      <FlexGridItem>
+        <Button onClick={openAccountModal.open} $style={btnStyles}>
+          Open Account
         </Button>
-      </Block>
-      <Block width="100%">
-        <Button onClick={loginModal.open} $style={{ width: '100%' }}>
-          Login
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={closeAccountModal.open} $style={btnStyles}>
+          Close Account
         </Button>
-      </Block>
-      <NewCustomerModal newCustomerModal={newCustomerModal} />
-      <LoginModal loginModal={loginModal} />
-    </Block>
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={depositModal.open} $style={btnStyles}>
+          Deposit
+        </Button>
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={withdrawModal.open} $style={btnStyles}>
+          Withdraw
+        </Button>
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={transferModal.open} $style={btnStyles}>
+          Transfer
+        </Button>
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={accountSummaryModal.open} $style={btnStyles}>
+          Account Summary
+        </Button>
+      </FlexGridItem>
+      <FlexGridItem>
+        <ExitToTitleButton $style={btnStyles} />
+      </FlexGridItem>
+
+      <OpenAccountModal openAccountModal={openAccountModal} />
+      <CloseAccountModal closeAccountModal={closeAccountModal} />
+      <DepositModal depositModal={depositModal} />
+      <WithdrawModal withdrawModal={withdrawModal} />
+      <TransferModal transferModal={transferModal} />
+      <AccountSummaryModal accountSummaryModal={accountSummaryModal} />
+    </FlexGrid>
   )
 }
