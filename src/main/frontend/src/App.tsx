@@ -2,6 +2,7 @@ import { Block } from 'baseui/block'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import ConnectionTest from './components/ConnectionTest'
 import { LoginProvider } from './LoginContext'
+import AdminPage from './pages/AdminPage'
 import CustomerPage from './pages/CustomerPage'
 import TitlePage from './pages/TitlePage'
 
@@ -27,10 +28,7 @@ const App = () => {
           <Routes>
             <Route path={ROUTES.title} element={<TitlePage />} caseSensitive />
             <Route path={ROUTES.customer} element={<CustomerPage />} />
-            <Route
-              path={ROUTES.admin}
-              element={<div style={{ color: 'red' }}>ADMIN</div>}
-            />
+            <Route path={ROUTES.admin} element={<AdminPage />} />
           </Routes>
         </BrowserRouter>
       </Block>

@@ -30,6 +30,7 @@ export const LoginModal = (props: {
       clear()
       setCustomerId && setCustomerId('0')
       navigate(ROUTES.admin)
+      return
     }
 
     const endpoint = `${LOGIN_ENDPOINT}?cusID=${id}&pin=${pin}`
