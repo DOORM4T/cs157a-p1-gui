@@ -5,6 +5,7 @@ import { DisplayMedium, Paragraph1 } from 'baseui/typography'
 import { useDialogModal } from '../components/DialogModal'
 import { ExitToTitleButton } from '../components/ExitToTitleButton'
 import { AccountSummaryModal } from '../components/Modals/AccountSummaryModal'
+import { AddInterestModal } from '../components/Modals/AddInterestModal'
 import { ReportBModal } from '../components/Modals/ReportBModal'
 import { useGetReportA } from '../hooks/useGetReportA'
 import { useRedirectIfNotLoggedIn } from '../hooks/useRedirectIfNotLoggedIn'
@@ -34,6 +35,7 @@ const AdminScreenModalManager = () => {
   const accountSummaryModal = useDialogModal()
   const getReportA = useGetReportA()
   const reportBModal = useDialogModal()
+  const addInterestModal = useDialogModal()
 
   return (
     <FlexGrid
@@ -46,6 +48,11 @@ const AdminScreenModalManager = () => {
       <FlexGridItem>
         <Button onClick={accountSummaryModal.open} $style={btnStyles}>
           Account Summary
+        </Button>
+      </FlexGridItem>
+      <FlexGridItem>
+        <Button onClick={addInterestModal.open} $style={btnStyles}>
+          Add Interest
         </Button>
       </FlexGridItem>
       <FlexGridItem>
@@ -63,6 +70,7 @@ const AdminScreenModalManager = () => {
       </FlexGridItem>
 
       <AccountSummaryModal accountSummaryModal={accountSummaryModal} />
+      <AddInterestModal addInterestModal={addInterestModal} />
       <ReportBModal reportBModal={reportBModal} />
     </FlexGrid>
   )

@@ -139,6 +139,18 @@ public class BankingSystemRestController {
         }
     }
 
+    @GetMapping("/api/addInterest")
+    public String addInterest(@RequestParam(value = "savingsRate") String savingsRate, @RequestParam(value = "checkingRate") String checkingRate) {
+        try {
+            if (Integer.parseInt(savingsRate) <= 0) throw new Exception("Invalid savings rate");
+            if (Integer.parseInt(checkingRate) <= 0) throw new Exception("Invalid checking rate");
+            return BankingSystem.addInterest(savingsRate, checkingRate);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+    }
+
     @GetMapping("/api/canLogin")
     public String canLogin(@RequestParam(value = "cusID") String cusID, @RequestParam(value = "pin") String pin) {
         try {
