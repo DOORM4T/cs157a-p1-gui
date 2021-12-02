@@ -15,7 +15,7 @@ const TitlePage = () => {
       $style={{ textAlign: 'center' }}
     >
       <DisplayMedium>Banking System</DisplayMedium>
-      <ParagraphMedium>By Matthew Seto | CS 157A Project 1</ParagraphMedium>
+      <ParagraphMedium>By Matthew Seto | CS 157A Project 2</ParagraphMedium>
       <TitleScreenModalManager />
     </Block>
   );
