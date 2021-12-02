@@ -1,12 +1,14 @@
-package edu.sjsu.mseto.p1_gui.p1;
+package edu.sjsu.mseto.p1_gui.p2;
 
 import java.io.FileInputStream;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -16,7 +18,7 @@ import java.util.Properties;
 public class BankingSystem {
     // Database schema constants
     // it for each statement.
-    private static final String SCHEMA_NAME = "P1";
+    private static final String SCHEMA_NAME = "P2";
 
     private static final String ACCOUNT_TABLE = "ACCOUNT";
     private static final String CUSTOMER_TABLE = "CUSTOMER";
@@ -84,6 +86,7 @@ public class BankingSystem {
             System.out.println(":: TEST - FAILED CONNECTED TO DATABASE");
             e.printStackTrace();
         }
+
         return false;
     }
 
@@ -100,30 +103,35 @@ public class BankingSystem {
         System.out.println(":: CREATE NEW CUSTOMER - RUNNING");
 
         try {
-            String sql = String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?)", CUSTOMER_TABLE,
-                    CUSTOMER_ATTR_NAME, CUSTOMER_ATTR_GENDER, CUSTOMER_ATTR_AGE, CUSTOMER_ATTR_PIN);
+            // 1. IN p_name CHAR(15)
+            // 2. IN p_gender CHAR(1)
+            // 3. IN p_age INTEGER
+            // 4. IN p_pin INTEGER
+            // 5. OUT id INTEGER
+            // 6. OUT sql_code INTEGER
+            // 7. OUT err_msg CHAR(100)
 
-            // Use the RETURN_GENERATED_KEYS option so we can get the automatically
-            // generated ID of the new customer
-            PreparedStatement insertCustomer = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            CallableStatement insertCustomer = con.prepareCall("CALL P2.CUST_CRT(?, ?, ?, ?, ?, ?, ?)");
 
             insertCustomer.setString(1, name);
             insertCustomer.setString(2, gender);
-
             setPSInt(insertCustomer, 3, age, "CREATE NEW CUSTOMER", "INVALID AGE");
             setPSInt(insertCustomer, 4, pin, "CREATE NEW CUSTOMER", "INVALID PIN");
+            insertCustomer.registerOutParameter(5, Types.INTEGER);
+            insertCustomer.registerOutParameter(6, Types.INTEGER);
+            insertCustomer.registerOutParameter(7, Types.CHAR);
 
             stmt = insertCustomer;
-            int result = insertCustomer.executeUpdate();
+            insertCustomer.executeUpdate();
 
-            // Get the auto-generated customer ID
-            rs = insertCustomer.getGeneratedKeys();
-            rs.next();
-            int newCustomerId = rs.getInt(1);
+            int newCustomerId = insertCustomer.getInt(5);
+            int sql_code = insertCustomer.getInt(6);
+            String err_msg = insertCustomer.getString(7);
+
             stmt.close();
 
-            if (result == 0)
-                throw new Exception();
+            if (sql_code != 0)
+                throw new BankingSystemException("CREATE NEW CUSTOMER", err_msg);
 
             System.out.println(":: CREATE NEW CUSTOMER - SUCCESS");
             return newCustomerId;
@@ -141,33 +149,41 @@ public class BankingSystem {
      * @param id     customer id
      * @param type   type of account
      * @param amount initial deposit amount
-     * @return returns the New account ID. Returns -1 upon failure.
+     * @return returns the New account number. Returns -1 upon failure.
      */
     public static int openAccount(String id, String type, String amount) {
         System.out.println(":: OPEN ACCOUNT - RUNNING");
 
         try {
-            String sql = String.format("INSERT INTO %s (%s, %s, %s, %s) VALUES (?, ?, ?, ?)", ACCOUNT_TABLE,
-                    ACCOUNT_ATTR_ID, ACCOUNT_ATTR_TYPE, ACCOUNT_ATTR_BALANCE, ACCOUNT_ATTR_STATUS);
-            PreparedStatement openAcc = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            // 1. IN p_id INTEGER
+            // 2. IN p_balance INTEGER
+            // 3. IN p_type CHAR(1)
+            // 4. OUT number INTEGER
+            // 5. OUT sql_code INTEGER
+            // 6. OUT err_msg CHAR(100)
+            CallableStatement openAccount = con.prepareCall("CALL P2.ACCT_OPN(?, ?, ?, ?, ?, ?)");
 
-            setPSInt(openAcc, 1, id, "OPEN ACCOUNT", "INVALID ID");
-            openAcc.setString(2, type);
-            setPSInt(openAcc, 3, amount, "OPEN ACCOUNT", "INVALID AMOUNT");
-            openAcc.setString(4, "A"); // The created account will be (A)ctive
+            setPSInt(openAccount, 1, id, "OPEN ACCOUNT", "INVALID ID");
+            setPSInt(openAccount, 2, amount, "OPEN ACCOUNT", "INVALID AMOUNT");
+            openAccount.setString(3, type);
+            openAccount.registerOutParameter(4, Types.INTEGER);
+            openAccount.registerOutParameter(5, Types.INTEGER);
+            openAccount.registerOutParameter(6, Types.CHAR);
 
-            stmt = openAcc;
-            int result = openAcc.executeUpdate();
-            // Get the auto-generated account ID
-            rs = openAcc.getGeneratedKeys();
-            rs.next();
-            int newAccId = rs.getInt(1);
+            stmt = openAccount;
+            openAccount.executeUpdate();
+
+            int newAccountNum = openAccount.getInt(4);
+            int sql_code = openAccount.getInt(5);
+            String err_msg = openAccount.getString(6);
+
             stmt.close();
 
-            if (result == 0)
-                throw new Exception();
+            if (sql_code != 0)
+                throw new BankingSystemException("OPEN ACCOUNT", err_msg);
+
             System.out.println(":: OPEN ACCOUNT - SUCCESS");
-            return newAccId;
+            return newAccountNum;
         } catch (BankingSystemException e) {
             System.out.println(e.getMessage());
         } catch (Exception e) {
@@ -181,29 +197,40 @@ public class BankingSystem {
      * Close an account.
      *
      * @param accNum account number
-     * @return result String
      */
     public static String closeAccount(String accNum) {
         System.out.println(":: CLOSE ACCOUNT - RUNNING");
 
-        String result = ":: CLOSE ACCOUNT - SUCCESS";
+        String result;
         try {
-            PreparedStatement closeAccount = con.prepareStatement(String.format("UPDATE %s SET %s = 'I' WHERE %s = ?",
-                    ACCOUNT_TABLE, ACCOUNT_ATTR_STATUS, ACCOUNT_ATTR_NUMBER));
+            // 1. IN p_number INTEGER
+            // 2. OUT sql_code INTEGER
+            // 3. OUT err_msg CHAR(100)
+            CallableStatement closeAccount = con.prepareCall("CALL P2.ACCT_CLS(?, ?, ?)");
 
             setPSInt(closeAccount, 1, accNum, "CLOSE ACCOUNT", "INVALID ACCOUNT NUMBER");
+            closeAccount.registerOutParameter(2, Types.INTEGER);
+            closeAccount.registerOutParameter(3, Types.CHAR);
 
             stmt = closeAccount;
-            int numChanged = closeAccount.executeUpdate();
+            closeAccount.executeUpdate();
+
+            int sql_code = closeAccount.getInt(2);
+            String err_msg = closeAccount.getString(3);
+
             stmt.close();
 
-            if (numChanged == 0)
-                throw new Exception();
+            if (sql_code != 0)
+                throw new BankingSystemException("CLOSE ACCOUNT", err_msg);
+
+            result = ":: CLOSE ACCOUNT - SUCCESS";
         } catch (BankingSystemException e) {
             result = e.getMessage();
         } catch (Exception e) {
             result = ":: CLOSE ACCOUNT - FAILED";
         }
+
+        System.out.println(result);
         return result;
     }
 
@@ -212,45 +239,43 @@ public class BankingSystem {
      *
      * @param accNum account number
      * @param amount deposit amount
-     * @return result String
      */
     public static String deposit(String accNum, String amount) {
         System.out.println(":: DEPOSIT - RUNNING");
 
-        String result = ":: DEPOSIT - SUCCESS";
+        String result;
         try {
-            handleDeposit(accNum, amount);
+            // 1. IN p_number INTEGER
+            // 2. IN p_amt INTEGER
+            // 3. OUT sql_code INTEGER
+            // 4. OUT err_msg CHAR(100)
+            CallableStatement deposit = con.prepareCall("CALL P2.ACCT_DEP(?, ?, ?, ?)");
+
+            setPSInt(deposit, 1, accNum, "DEPOSIT", "INVALID ACCOUNT NUMBER");
+            setPSInt(deposit, 2, amount, "DEPOSIT", "INVALID AMOUNT");
+            deposit.registerOutParameter(3, Types.INTEGER);
+            deposit.registerOutParameter(4, Types.CHAR);
+
+            stmt = deposit;
+            deposit.executeUpdate();
+
+            int sql_code = deposit.getInt(3);
+            String err_msg = deposit.getString(4);
+
+            stmt.close();
+
+            if (sql_code != 0)
+                throw new BankingSystemException("DEPOSIT", err_msg);
+
+            result = ":: DEPOSIT - SUCCESS";
         } catch (BankingSystemException e) {
             result = e.getMessage();
         } catch (Exception e) {
             result = ":: DEPOSIT - FAILED";
         }
 
+        System.out.println(result);
         return result;
-    }
-
-    /**
-     * Handle a deposit
-     * <p>
-     * Error handling should be managed by the code calling this method.
-     *
-     * @param accNum
-     * @param amount
-     * @throws Exception
-     */
-    private static void handleDeposit(String accNum, String amount) throws Exception {
-        PreparedStatement deposit = con.prepareStatement(String.format("UPDATE %s SET %s = %s + ? WHERE %s = ?",
-                ACCOUNT_TABLE, ACCOUNT_ATTR_BALANCE, ACCOUNT_ATTR_BALANCE, ACCOUNT_ATTR_NUMBER));
-
-        setPSInt(deposit, 1, amount, "DEPOSIT", "INVALID AMOUNT");
-        setPSInt(deposit, 2, accNum, "DEPOSIT", "INVALID ACCOUNT NUMBER");
-
-        stmt = deposit;
-        int result = deposit.executeUpdate();
-        stmt.close();
-
-        if (result == 0)
-            throw new Exception("0 accounts were updated by the deposit.");
     }
 
     /**
@@ -258,66 +283,42 @@ public class BankingSystem {
      *
      * @param accNum account number
      * @param amount withdraw amount
-     * @return result String
      */
     public static String withdraw(String accNum, String amount) {
         System.out.println(":: WITHDRAW - RUNNING");
-        String result = ":: WITHDRAW - SUCCESS";
+
+        String result;
         try {
-            handleWithdraw(accNum, amount);
+            // 1. IN p_number INTEGER
+            // 2. IN p_amt INTEGER
+            // 3. OUT sql_code INTEGER
+            // 4. OUT err_msg CHAR(100)
+            CallableStatement withdraw = con.prepareCall("CALL P2.ACCT_WTH(?, ?, ?, ?)");
+
+            setPSInt(withdraw, 1, accNum, "WITHDRAW", "INVALID ACCOUNT NUMBER");
+            setPSInt(withdraw, 2, amount, "WITHDRAW", "INVALID AMOUNT");
+            withdraw.registerOutParameter(3, Types.INTEGER);
+            withdraw.registerOutParameter(4, Types.CHAR);
+
+            stmt = withdraw;
+            withdraw.executeUpdate();
+
+            int sql_code = withdraw.getInt(3);
+            String err_msg = withdraw.getString(4);
+
+            stmt.close();
+
+            if (sql_code != 0)
+                throw new BankingSystemException("WITHDRAW", err_msg);
+            result = ":: WITHDRAW - SUCCESS";
         } catch (BankingSystemException e) {
             result = e.getMessage();
         } catch (Exception e) {
             result = ":: WITHDRAW - FAILED";
         }
 
+        System.out.println(result);
         return result;
-    }
-
-    /**
-     * Handle a withdrawal
-     * <p>
-     * Error handling should be managed by the code calling this method.
-     *
-     * @param accNum
-     * @param amount
-     * @throws Exception
-     */
-    private static void handleWithdraw(String accNum, String amount) throws Exception {
-        PreparedStatement withdraw = con.prepareStatement(String.format("UPDATE %s SET %s = %s - ? WHERE %s = ?",
-                ACCOUNT_TABLE, ACCOUNT_ATTR_BALANCE, ACCOUNT_ATTR_BALANCE, ACCOUNT_ATTR_NUMBER));
-
-        setPSInt(withdraw, 1, amount, "WITHDRAW", "INVALID AMOUNT");
-        setPSInt(withdraw, 2, accNum, "WITHDRAW", "INVALID ACCOUNT NUMBER");
-
-        stmt = withdraw;
-
-        int result;
-        try {
-            result = withdraw.executeUpdate();
-        } catch (SQLException e) {
-            // Upon SQLException, look for a CHECK constraint violation error
-            // An SQLException may have multiple SQLExceptions, so we iterate through them!
-            SQLException ex = e;
-            while (ex != null) {
-                // Error Code -545 indicates a CHECK constraint violation
-                // In this case, the withdrawal would violate the constraint where balance must
-                // be >= 0
-                // Reference: https://www.ibm.com/docs/en/db2-for-zos/11?topic=codes-545
-                if (ex.getErrorCode() == CHECK_CONSTRAINT_VIOLATION_ERROR_CODE)
-                    throw new BankingSystemException("WITHDRAW", "NOT ENOUGH FUNDS");
-                ex = e.getNextException();
-            }
-
-            // Otherwise, throw the Exception for handling elsewhere
-            throw e;
-        }
-
-        if (result == 0)
-            throw new Exception("0 accounts were updated by the withdrawal.");
-
-        stmt.close();
-
     }
 
     /**
@@ -326,15 +327,37 @@ public class BankingSystem {
      * @param srcAccNum  source account number
      * @param destAccNum destination account number
      * @param amount     transfer amount
-     * @return string result
      */
     public static String transfer(String srcAccNum, String destAccNum, String amount) {
         System.out.println(":: TRANSFER - RUNNING");
 
-        String result = ":: TRANSFER - SUCCESS";
+        String result;
         try {
-            handleWithdraw(srcAccNum, amount);
-            handleDeposit(destAccNum, amount);
+            // 1. IN p_number_src INTEGER
+            // 2. IN p_number_dest INTEGER
+            // 3. IN p_amt INTEGER
+            // 4. OUT sql_code INTEGER
+            // 5. OUT err_msg CHAR(100))
+            CallableStatement transfer = con.prepareCall("CALL P2.ACCT_TRX(?, ?, ?, ?, ?)");
+
+            setPSInt(transfer, 1, srcAccNum, "TRANSFER", "INVALID SOURCE ACCOUNT NUMBER");
+            setPSInt(transfer, 2, destAccNum, "TRANSFER", "INVALID DESTINATION ACCOUNT NUMBER");
+            setPSInt(transfer, 3, amount, "TRANSFER", "INVALID AMOUNT");
+            transfer.registerOutParameter(4, Types.INTEGER);
+            transfer.registerOutParameter(5, Types.CHAR);
+
+            stmt = transfer;
+            transfer.executeUpdate();
+
+            int sql_code = transfer.getInt(4);
+            String err_msg = transfer.getString(5);
+
+            stmt.close();
+
+            if (sql_code != 0)
+                throw new BankingSystemException("TRANSFER", err_msg);
+
+            result = ":: TRANSFER - SUCCESS";
         } catch (BankingSystemException e) {
             result = e.getMessage();
         } catch (Exception e) {
@@ -479,7 +502,7 @@ public class BankingSystem {
         int avgResult;
         try {
             PreparedStatement reportB = con.prepareStatement(String.format(
-                    "SELECT AVG(ASUM.total) FROM p1.%s C, (SELECT %s, SUM(%s) as total FROM %s WHERE %s = 'A' GROUP BY %s) ASUM WHERE C.%s >= ? AND C.%s <= ? AND C.%s = ASUM.%s",
+                    "SELECT AVG(ASUM.total) FROM %s C, (SELECT %s, SUM(%s) as total FROM %s WHERE %s = 'A' GROUP BY %s) ASUM WHERE C.%s >= ? AND C.%s <= ? AND C.%s = ASUM.%s",
                     CUSTOMER_TABLE, ACCOUNT_ATTR_ID, ACCOUNT_ATTR_BALANCE, ACCOUNT_TABLE, ACCOUNT_ATTR_STATUS,
                     ACCOUNT_ATTR_ID, CUSTOMER_ATTR_AGE, CUSTOMER_ATTR_AGE, CUSTOMER_ATTR_ID, ACCOUNT_ATTR_ID));
 
@@ -526,23 +549,33 @@ public class BankingSystem {
         System.out.println(":: LOGIN - RUNNING");
 
         try {
-            PreparedStatement findCustomer = con
-                    .prepareStatement(String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ? LIMIT 1",
-                            CUSTOMER_ATTR_ID, CUSTOMER_TABLE, CUSTOMER_ATTR_ID, CUSTOMER_ATTR_PIN));
+            // 1. IN p_id INTEGER
+            // 2. IN p_pin INTEGER
+            // 3. OUT valid INTEGER
+            // 4. OUT sql_code INTEGER
+            // 5. OUT err_msg CHAR(100)
+            CallableStatement loginCustomer = con.prepareCall("CALL P2.CUST_LOGIN(?, ?, ?, ?, ?)");
 
-            setPSInt(findCustomer, 1, id, "LOGIN", "INVALID CUSTOMER ID");
-            setPSInt(findCustomer, 2, pin, "LOGIN", "INVALID PIN");
+            setPSInt(loginCustomer, 1, id, "LOGIN", "INVALID ID");
+            setPSInt(loginCustomer, 2, pin, "LOGIN", "INVALID PIN");
+            loginCustomer.registerOutParameter(3, Types.INTEGER);
+            loginCustomer.registerOutParameter(4, Types.INTEGER);
+            loginCustomer.registerOutParameter(5, Types.CHAR);
 
-            stmt = findCustomer;
-            rs = findCustomer.executeQuery();
+            stmt = loginCustomer;
+            loginCustomer.executeUpdate();
 
-            // This query should return one row containing the customer's ID
-            rs.next();
-            int result = rs.getInt(1);
-            boolean canLogin = String.valueOf(result).equals(id);
+            int valid = loginCustomer.getInt(3);
+            int sql_code = loginCustomer.getInt(4);
+            String err_msg = loginCustomer.getString(5);
+
             stmt.close();
 
-            return canLogin;
+            if (sql_code != 0)
+                throw new BankingSystemException("LOGIN", err_msg);
+
+            // Can login if valid == 1
+            return valid == 1 ? true : false;
         } catch (BankingSystemException e) {
             System.out.println(e.getMessage());
         } catch (Exception e) {
@@ -550,6 +583,51 @@ public class BankingSystem {
         }
         return false;
     }
+
+    /**
+     * Add interest to all active accounts. Different account types may have
+     * different rates.
+     *
+     * @param savingsRate
+     * @param checkingRate
+     */
+    public static String addInterest(String savingsRate, String checkingRate) {
+        System.out.println(":: ADD INTEREST - RUNNING");
+
+        String result;
+        try {
+            // 1. IN p_savings_rate REAL
+            // 2. IN p_checking_rate REAL
+            // 3. OUT sql_code INTEGER
+            // 4. OUT err_msg CHAR(100))
+            CallableStatement addInterest = con.prepareCall("CALL P2.ADD_INTEREST(?, ?, ?, ?)");
+
+            setPSFloat(addInterest, 1, savingsRate, "ADD INTEREST", "INVALID SAVINGS RATE");
+            setPSFloat(addInterest, 2, checkingRate, "ADD INTEREST", "INVALID CHECKING RATE");
+            addInterest.registerOutParameter(3, Types.INTEGER);
+            addInterest.registerOutParameter(4, Types.CHAR);
+
+            stmt = addInterest;
+            addInterest.executeUpdate();
+
+            int sql_code = addInterest.getInt(3);
+            String err_msg = addInterest.getString(4);
+
+            stmt.close();
+
+            if (sql_code != 0)
+                throw new BankingSystemException("ADD INTEREST", err_msg);
+
+            result = ":: ADD INTEREST - SUCCESS";
+        } catch (BankingSystemException e) {
+            result = e.getMessage();
+        } catch (Exception e) {
+            result = ":: ADD INTEREST - FAILED";
+        }
+        System.out.println(result);
+        return result;
+    }
+
 
     /**
      * Checks if an account belongs to the specified customer
@@ -618,6 +696,26 @@ public class BankingSystem {
             throws BankingSystemException {
         try {
             ps.setInt(index, Integer.parseInt(toParse));
+        } catch (Exception e) {
+            throw new BankingSystemException(methodName, errReason);
+        }
+    }
+
+    /**
+     * Parses a String to a Float and sets it at a specified index of a prepared
+     * statement
+     *
+     * @param ps
+     * @param index
+     * @param toParse
+     * @param methodName
+     * @param errReason
+     * @throws BankingSystemException with a custom method name and error reason
+     */
+    private static void setPSFloat(PreparedStatement ps, int index, String toParse, String methodName, String errReason)
+            throws BankingSystemException {
+        try {
+            ps.setFloat(index, Float.parseFloat(toParse));
         } catch (Exception e) {
             throw new BankingSystemException(methodName, errReason);
         }

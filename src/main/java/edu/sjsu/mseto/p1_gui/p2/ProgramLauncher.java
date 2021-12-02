@@ -1,4 +1,4 @@
-package edu.sjsu.mseto.p1_gui.p1;
+package edu.sjsu.mseto.p1_gui.p2;
 
 /**
  * Main entry to program.

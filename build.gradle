@@ -17,7 +17,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    implementation files('src/main/java/edu/sjsu/mseto/p1_gui/p1/db2jcc4.jar')
+    implementation files('src/main/java/edu/sjsu/mseto/p1_gui/p2/db2jcc4.jar')
 }
 
 test {
